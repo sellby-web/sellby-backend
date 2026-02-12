@@ -7,6 +7,7 @@ import { AdvertisementModule } from './advertisement/advertisement.module';
 import { AssetModule } from './asset/asset.module';
 import { MessageModule } from './message/message.module';
 import { WishlistModule } from './wishlist/wishlist.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { WishlistModule } from './wishlist/wishlist.module';
     AssetModule,
     MessageModule,
     WishlistModule,
+    PrismaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
