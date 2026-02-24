@@ -5,11 +5,11 @@ name: CI
 on:
   # Run when code is pushed to main branch
   push:
-    branches: [ "main" ]
+    branches: [ "main", "development" ]
 
   # Run when a pull request is opened targeting main
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "development" ]
 
   # Allow manual trigger from GitHub Actions tab
   workflow_dispatch:
