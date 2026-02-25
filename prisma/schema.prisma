@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Advertisement {
-  id          String   @id @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
   createdBy   String   @map("created_by") @db.Uuid
   title       String?  @db.VarChar
   description String?  @db.VarChar
@@ -29,7 +29,7 @@ model Advertisement {
 
 
 model Asset {
-  id               String   @id @db.Uuid
+  id               String   @id @default(uuid()) @db.Uuid
   advertisementId  String   @map("advertisement_id") @db.Uuid
   url              String   @db.VarChar
   position         Int
@@ -47,7 +47,7 @@ model Asset {
 
 
 model Message {
-  id         String   @id @db.Uuid
+  id         String   @id @default(uuid()) @db.Uuid
   senderId   String   @map("sender_id") @db.Uuid
   receiverId String   @map("receiver_id") @db.Uuid
   message    String   @db.VarChar
@@ -65,7 +65,7 @@ model Message {
 }
 
 model User {
-  id          String   @id @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
   firstName   String   @map("first_name") @db.VarChar
   lastName    String   @map("last_name") @db.VarChar
   email       String   @unique @db.VarChar
@@ -87,7 +87,7 @@ model User {
 
 
 model WishlistAdvertisement {
-  id              String   @id @db.Uuid
+  id              String   @id @default(uuid()) @db.Uuid
   advertisementId String   @map("advertisement_id") @db.Uuid
   wishlistId      String   @map("wishlist_id") @db.Uuid
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(6)
@@ -103,7 +103,7 @@ model WishlistAdvertisement {
 
 
 model Wishlist {
-  id        String   @id @db.Uuid
+  id        String   @id @default(uuid()) @db.Uuid
   ownerId   String   @map("owner_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
