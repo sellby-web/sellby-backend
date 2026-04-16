@@ -48,13 +48,26 @@ export class AuthService {
     return sanitizedUser;
   }
 
+  getCookieName() {
+    return this.configService.get<string>('AUTH_COOKIE_NAME', 'Authentication');
+  }
+
   getCookieOptions() {
-    const secure = this.configService.get('NODE_ENV') === 'production';
+    const secure =
+      this.configService.get<string>('COOKIE_SECURE', '') === 'true' ||
+      this.configService.get<string>('NODE_ENV') === 'production';
+    const maxAge = Number(
+      this.configService.get<string>('COOKIE_MAX_AGE', '86400000'),
+    );
+
     return {
       httpOnly: true,
       secure,
-      sameSite: 'lax' as const,
-      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: this.configService.get<string>('COOKIE_SAMESITE', 'lax') as
+        | 'lax'
+        | 'strict'
+        | 'none',
+      maxAge,
       path: '/',
     };
   }

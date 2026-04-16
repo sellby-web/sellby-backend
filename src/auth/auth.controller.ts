@@ -19,7 +19,11 @@ export class AuthController {
       password: createUserDto.password,
     });
 
-    res.cookie('Authentication', accessToken, this.authService.getCookieOptions());
+    res.cookie(
+      this.authService.getCookieName(),
+      accessToken,
+      this.authService.getCookieOptions(),
+    );
     return { user };
   }
 
@@ -30,14 +34,21 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { accessToken, user } = await this.authService.signIn(signInDto);
-    res.cookie('Authentication', accessToken, this.authService.getCookieOptions());
+    res.cookie(
+      this.authService.getCookieName(),
+      accessToken,
+      this.authService.getCookieOptions(),
+    );
     return { user };
   }
 
   @Post('logout')
   @HttpCode(200)
   logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('Authentication', this.authService.getCookieOptions());
+    res.clearCookie(
+      this.authService.getCookieName(),
+      this.authService.getCookieOptions(),
+    );
     return { message: 'Logged out successfully' };
   }
 }
