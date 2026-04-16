@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
@@ -21,9 +22,16 @@ export class UserService {
       throw new ConflictException('User with this email already exists');
     }
 
-    return this.prisma.user.create({
-      data: createUserDto,
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const user = await this.prisma.user.create({
+      data: {
+        ...createUserDto,
+        password: hashedPassword,
+      },
     });
+
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword as UserResponseDto;
   }
 
   async findAll(
@@ -56,6 +64,19 @@ export class UserService {
   }
 
   async findByEmail(email: string): Promise<UserResponseDto | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword as UserResponseDto;
+  }
+
+  async findByEmailWithPassword(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
     });
