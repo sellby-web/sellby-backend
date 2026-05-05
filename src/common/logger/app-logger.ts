@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import * as winston from 'winston';
 
-let ordinal = 0;
+export interface RequestMeta {
+  requestId: string;
+  ordinal: number;
+}
 
 function sanitize(data: unknown): unknown {
   if (data === null || typeof data !== 'object') return data;
@@ -35,24 +38,24 @@ export class AppLogger {
     });
   }
 
-  private meta(context: string, requestId?: string, data?: unknown) {
+  private buildMeta(context: string, meta?: RequestMeta, data?: unknown) {
     return {
-      ordinal: ++ordinal,
-      requestId: requestId ?? 'no-request',
+      ordinal: meta ? ++meta.ordinal : 0,
+      requestId: meta?.requestId ?? 'no-request',
       context,
       ...(data !== undefined && { data: sanitize(data) }),
     };
   }
 
-  info(context: string, message: string, requestId?: string, data?: unknown): void {
-    this.winston.info(message, this.meta(context, requestId, data));
+  info(context: string, message: string, meta?: RequestMeta, data?: unknown): void {
+    this.winston.info(message, this.buildMeta(context, meta, data));
   }
 
-  warn(context: string, message: string, requestId?: string, data?: unknown): void {
-    this.winston.warn(message, this.meta(context, requestId, data));
+  warn(context: string, message: string, meta?: RequestMeta, data?: unknown): void {
+    this.winston.warn(message, this.buildMeta(context, meta, data));
   }
 
-  error(context: string, message: string, requestId?: string, data?: unknown): void {
-    this.winston.error(message, this.meta(context, requestId, data));
+  error(context: string, message: string, meta?: RequestMeta, data?: unknown): void {
+    this.winston.error(message, this.buildMeta(context, meta, data));
   }
 }

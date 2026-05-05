@@ -27,9 +27,9 @@ export class WishlistController {
 
   @Get()
   async getWishlist(@Req() req: Request, @CurrentUser() user: JwtPayload): Promise<WishlistWithAds | null> {
-    this.logger.info('WishlistController', 'getWishlist received', req.meta.requestId, { userId: user.userId });
+    this.logger.info('WishlistController', 'getWishlist received', req.meta, { userId: user.userId });
     const result = await this.wishlistService.getWishlist(user.userId);
-    this.logger.info('WishlistController', 'getWishlist response', req.meta.requestId, { wishlistId: result?.id });
+    this.logger.info('WishlistController', 'getWishlist response', req.meta, { wishlistId: result?.id });
     return result;
   }
 
@@ -39,9 +39,9 @@ export class WishlistController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: AddWishlistItemDto,
   ): Promise<WishlistItemWithAd> {
-    this.logger.info('WishlistController', 'addItem received', req.meta.requestId, { userId: user.userId, body: dto });
+    this.logger.info('WishlistController', 'addItem received', req.meta, { userId: user.userId, body: dto });
     const result = await this.wishlistService.addItem(user.userId, dto);
-    this.logger.info('WishlistController', 'addItem response', req.meta.requestId, { result });
+    this.logger.info('WishlistController', 'addItem response', req.meta, { result });
     return result;
   }
 
@@ -51,9 +51,9 @@ export class WishlistController {
     @CurrentUser() user: JwtPayload,
     @Param('advertisementId') advertisementId: string,
   ): Promise<{ message: string }> {
-    this.logger.info('WishlistController', 'removeItem received', req.meta.requestId, { userId: user.userId, advertisementId });
+    this.logger.info('WishlistController', 'removeItem received', req.meta, { userId: user.userId, advertisementId });
     const result = await this.wishlistService.removeItem(user.userId, advertisementId);
-    this.logger.info('WishlistController', 'removeItem response', req.meta.requestId, { result });
+    this.logger.info('WishlistController', 'removeItem response', req.meta, { result });
     return result;
   }
 }

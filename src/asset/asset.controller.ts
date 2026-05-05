@@ -35,9 +35,9 @@ export class AssetController {
     @Req() req: Request,
     @Query('fileName') fileName: string,
   ): Promise<UploadUrlResponse> {
-    this.logger.info('AssetController', 'getUploadUrl received', req.meta.requestId, { fileName });
+    this.logger.info('AssetController', 'getUploadUrl received', req.meta, { fileName });
     const result = await this.assetService.generateUploadUrl(fileName);
-    this.logger.info('AssetController', 'getUploadUrl response', req.meta.requestId, { path: result.path });
+    this.logger.info('AssetController', 'getUploadUrl response', req.meta, { path: result.path });
     return result;
   }
 
@@ -46,9 +46,9 @@ export class AssetController {
     @Req() req: Request,
     @Query('path') path: string,
   ): Promise<ViewUrlResponse> {
-    this.logger.info('AssetController', 'getViewUrl received', req.meta.requestId, { path });
+    this.logger.info('AssetController', 'getViewUrl received', req.meta, { path });
     const result = await this.assetService.generateViewUrl(path);
-    this.logger.info('AssetController', 'getViewUrl response', req.meta.requestId);
+    this.logger.info('AssetController', 'getViewUrl response', req.meta);
     return result;
   }
 
@@ -59,9 +59,9 @@ export class AssetController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateAssetDto,
   ): Promise<Asset> {
-    this.logger.info('AssetController', 'createRecord received', req.meta.requestId, { userId: user.userId, body: dto });
+    this.logger.info('AssetController', 'createRecord received', req.meta, { userId: user.userId, body: dto });
     const result = await this.assetService.createRecord(user.userId, dto);
-    this.logger.info('AssetController', 'createRecord response', req.meta.requestId, { assetId: result.id });
+    this.logger.info('AssetController', 'createRecord response', req.meta, { assetId: result.id });
     return result;
   }
 
@@ -72,9 +72,9 @@ export class AssetController {
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
   ): Promise<AssetDeleteResponse> {
-    this.logger.info('AssetController', 'removeRecord received', req.meta.requestId, { id, userId: user.userId });
+    this.logger.info('AssetController', 'removeRecord received', req.meta, { id, userId: user.userId });
     const result = await this.assetService.removeRecord(id, user.userId);
-    this.logger.info('AssetController', 'removeRecord response', req.meta.requestId, { result });
+    this.logger.info('AssetController', 'removeRecord response', req.meta, { result });
     return result;
   }
 }

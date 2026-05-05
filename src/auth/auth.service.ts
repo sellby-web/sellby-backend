@@ -6,7 +6,7 @@ import { UserService } from '../user/user.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { UserResponseDto } from '../user/dto/user-response.dto';
-import { AppLogger } from 'src/common/logger/app-logger';
+import { AppLogger, RequestMeta } from 'src/common/logger/app-logger';
 
 @Injectable()
 export class AuthService {
@@ -17,27 +17,27 @@ export class AuthService {
     private readonly logger: AppLogger,
   ) {}
 
-  async signUp(createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    this.logger.info('AuthService', 'signUp called', undefined, { email: createUserDto.email });
-    const result = await this.userService.create(createUserDto);
-    this.logger.info('AuthService', 'signUp done', undefined, { userId: result.id });
+  async signUp(createUserDto: CreateUserDto, meta?: RequestMeta): Promise<UserResponseDto> {
+    this.logger.info('AuthService', 'signUp called', meta, { email: createUserDto.email });
+    const result = await this.userService.create(createUserDto, meta);
+    this.logger.info('AuthService', 'signUp done', meta, { userId: result.id });
     return result;
   }
 
-  async signIn(signInDto: SignInDto): Promise<{ accessToken: string; user: UserResponseDto }> {
-    this.logger.info('AuthService', 'signIn called', undefined, { email: signInDto.email });
-    const user = await this.validateUser(signInDto.email, signInDto.password);
+  async signIn(signInDto: SignInDto, meta?: RequestMeta): Promise<{ accessToken: string; user: UserResponseDto }> {
+    this.logger.info('AuthService', 'signIn called', meta, { email: signInDto.email });
+    const user = await this.validateUser(signInDto.email, signInDto.password, meta);
     const token = this.jwtService.sign({
       sub: user.id,
       email: user.email,
       role: user.role,
     });
-    this.logger.info('AuthService', 'signIn done', undefined, { userId: user.id });
+    this.logger.info('AuthService', 'signIn done', meta, { userId: user.id });
     return { accessToken: token, user };
   }
 
-  async validateUser(email: string, password: string): Promise<UserResponseDto> {
-    this.logger.info('AuthService', 'validateUser called', undefined, { email });
+  async validateUser(email: string, password: string, meta?: RequestMeta): Promise<UserResponseDto> {
+    this.logger.info('AuthService', 'validateUser called', meta, { email });
     const user = await this.userService.findByEmailWithPassword(email);
 
     if (!user) {
@@ -50,7 +50,7 @@ export class AuthService {
     }
 
     const { password: _password, ...sanitizedUser } = user;
-    this.logger.info('AuthService', 'validateUser done', undefined, { email });
+    this.logger.info('AuthService', 'validateUser done', meta, { email });
     return sanitizedUser as UserResponseDto;
   }
 

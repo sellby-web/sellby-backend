@@ -33,12 +33,12 @@ export class MessageController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: SendMessageDto,
   ) {
-    this.logger.info('MessageController', 'send received', req.meta.requestId, {
+    this.logger.info('MessageController', 'send received', req.meta, {
       userId: user.userId,
       body: dto,
     });
     const result = await this.messageService.sendMessage(user.userId, dto);
-    this.logger.info('MessageController', 'send response', req.meta.requestId, {
+    this.logger.info('MessageController', 'send response', req.meta, {
       messageId: result.id,
     });
     return result;
@@ -52,14 +52,14 @@ export class MessageController {
     this.logger.info(
       'MessageController',
       'getConversationList received',
-      req.meta.requestId,
+      req.meta,
       { userId: user.userId },
     );
     const result = await this.messageService.getConversationList(user.userId);
     this.logger.info(
       'MessageController',
       'getConversationList response',
-      req.meta.requestId,
+      req.meta,
       { count: result.length },
     );
     return result;
@@ -76,7 +76,7 @@ export class MessageController {
     this.logger.info(
       'MessageController',
       'getConversation received',
-      req.meta.requestId,
+      req.meta,
       { userId: user.userId, advertisementId, otherUserId, query: dto },
     );
     const result = await this.messageService.getConversation(
@@ -88,7 +88,7 @@ export class MessageController {
     this.logger.info(
       'MessageController',
       'getConversation response',
-      req.meta.requestId,
+      req.meta,
       { total: result.total },
     );
     return result;
@@ -103,7 +103,7 @@ export class MessageController {
     this.logger.info(
       'MessageController',
       'markViewed received',
-      req.meta.requestId,
+      req.meta,
       { userId: user.userId, messageIds: dto.messageIds },
     );
     const result = await this.messageService.markViewed(
@@ -113,7 +113,7 @@ export class MessageController {
     this.logger.info(
       'MessageController',
       'markViewed response',
-      req.meta.requestId,
+      req.meta,
       { result },
     );
     return result;

@@ -19,19 +19,19 @@ export class AuthController {
     @Body() createUserDto: CreateUserDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ user: UserResponseDto }> {
-    this.logger.info('AuthController', 'signUp received', req.meta.requestId, { body: createUserDto });
-    const user = await this.authService.signUp(createUserDto);
+    this.logger.info('AuthController', 'signUp received', req.meta, { body: createUserDto });
+    const user = await this.authService.signUp(createUserDto, req.meta);
     const { accessToken } = await this.authService.signIn({
       email: createUserDto.email,
       password: createUserDto.password,
-    });
+    }, req.meta);
     res.cookie(
       this.authService.getCookieName(),
       accessToken,
       this.authService.getCookieOptions(),
     );
     const result = { user };
-    this.logger.info('AuthController', 'signUp response', req.meta.requestId, { result });
+    this.logger.info('AuthController', 'signUp response', req.meta, { result });
     return result;
   }
 
@@ -42,28 +42,28 @@ export class AuthController {
     @Body() signInDto: SignInDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ user: UserResponseDto }> {
-    this.logger.info('AuthController', 'signIn received', req.meta.requestId, { body: signInDto });
-    const { accessToken, user } = await this.authService.signIn(signInDto);
+    this.logger.info('AuthController', 'signIn received', req.meta, { body: signInDto });
+    const { accessToken, user } = await this.authService.signIn(signInDto, req.meta);
     res.cookie(
       this.authService.getCookieName(),
       accessToken,
       this.authService.getCookieOptions(),
     );
     const result = { user };
-    this.logger.info('AuthController', 'signIn response', req.meta.requestId, { result });
+    this.logger.info('AuthController', 'signIn response', req.meta, { result });
     return result;
   }
 
   @Post('logout')
   @HttpCode(200)
   logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): { message: string } {
-    this.logger.info('AuthController', 'logout received', req.meta.requestId);
+    this.logger.info('AuthController', 'logout received', req.meta);
     res.clearCookie(
       this.authService.getCookieName(),
       this.authService.getCookieOptions(),
     );
     const result = { message: 'Logged out successfully' };
-    this.logger.info('AuthController', 'logout response', req.meta.requestId, { result });
+    this.logger.info('AuthController', 'logout response', req.meta, { result });
     return result;
   }
 }
