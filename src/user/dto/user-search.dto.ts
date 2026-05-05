@@ -9,7 +9,7 @@ import {
 export class UserSearchDto {
   @IsNotEmpty()
   @IsString()
-  query: string;
+  query!: string;
 
   @IsOptional()
   @IsNumber()
