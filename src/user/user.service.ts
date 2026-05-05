@@ -79,6 +79,7 @@ export class UserService {
     return userWithoutPassword as UserResponseDto;
   }
 
+  // unlike findByEmail, this deliberately returns the raw password hash — only call this for bcrypt comparison during authentication
   async findByEmailWithPassword(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
   }
@@ -93,6 +94,7 @@ export class UserService {
     const where = {
       isDeleted: false,
       OR: [
+        // 'as const' narrows the type from string to the literal 'insensitive' that Prisma's generated types require; omitting it causes a TypeScript error
         { firstName: { contains: query, mode: 'insensitive' as const } },
         { lastName: { contains: query, mode: 'insensitive' as const } },
         { email: { contains: query, mode: 'insensitive' as const } },
@@ -138,6 +140,8 @@ export class UserService {
 
   async restore(id: string, meta?: RequestMeta): Promise<UserResponseDto> {
     this.logger.info('UserService', 'restore called', meta, { id });
+    // intentionally skips the findOne existence check — restoring a non-existent id throws a Prisma P2025,
+    // which surfaces as a 500; add a findOne call here if a 404 is preferred
     const result = await this.prisma.user.update({
       where: { id },
       data: { isDeleted: false, updatedAt: new Date() },

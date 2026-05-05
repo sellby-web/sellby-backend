@@ -32,6 +32,7 @@ export class AppLogger {
           filename: 'logs/app.log',
           maxsize: 10 * 1024 * 1024,
           maxFiles: 5,
+          // tailable keeps the active file always named app.log after rotation; without it Winston renames the file on each rotation and the active log gets a numeric suffix
           tailable: true,
         }),
       ],
@@ -40,7 +41,9 @@ export class AppLogger {
 
   private buildMeta(context: string, meta?: RequestMeta, data?: unknown) {
     return {
+      // mutates meta.ordinal in-place so every log line for the same request gets a monotonically increasing sequence number, enabling ordering in log aggregators
       ordinal: meta ? ++meta.ordinal : 0,
+      // 'no-request' identifies log entries emitted outside the HTTP request lifecycle (e.g. app startup, background jobs)
       requestId: meta?.requestId ?? 'no-request',
       context,
       ...(data !== undefined && { data: sanitize(data) }),

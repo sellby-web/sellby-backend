@@ -49,6 +49,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    // _password prefix is an intentional discard — TypeScript treats _ -prefixed variables as unused without warning
     const { password: _password, ...sanitizedUser } = user;
     this.logger.info('AuthService', 'validateUser done', meta, { email });
     return sanitizedUser as UserResponseDto;
@@ -59,6 +60,8 @@ export class AuthService {
   }
 
   getCookieOptions(): { httpOnly: boolean; secure: boolean; sameSite: 'lax' | 'strict' | 'none'; maxAge: number; path: string } {
+    // secure is true if COOKIE_SECURE=true OR NODE_ENV=production, so production
+    // deployments don't need to set COOKIE_SECURE explicitly
     const secure =
       this.configService.get<string>('COOKIE_SECURE', '') === 'true' ||
       this.configService.get<string>('NODE_ENV') === 'production';

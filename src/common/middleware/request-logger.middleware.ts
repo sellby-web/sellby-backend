@@ -22,9 +22,7 @@ export class RequestLoggerMiddleware implements NestMiddleware {
       ip: req.ip,
     });
 
-    // release meta reference on finish so it doesn't outlive
-    //  the request on keep-alive connections
-
+    // release meta reference on finish so it doesn't outlive the request on keep-alive connections
     res.on('finish', () => {
       (req as any).meta = undefined;
     });

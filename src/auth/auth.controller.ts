@@ -17,10 +17,13 @@ export class AuthController {
   async signUp(
     @Req() req: Request,
     @Body() createUserDto: CreateUserDto,
+    // passthrough: true is required — without it NestJS hands full response control to this handler
+    // and ignores the return value, resulting in an empty response body
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ user: UserResponseDto }> {
     this.logger.info('AuthController', 'signUp received', req.meta, { body: createUserDto });
     const user = await this.authService.signUp(createUserDto, req.meta);
+    // sign in immediately after registration so the cookie is set in the same response
     const { accessToken } = await this.authService.signIn({
       email: createUserDto.email,
       password: createUserDto.password,
@@ -40,6 +43,8 @@ export class AuthController {
   async signIn(
     @Req() req: Request,
     @Body() signInDto: SignInDto,
+    // passthrough: true is required — without it NestJS hands full response control to this handler
+    // and ignores the return value, resulting in an empty response body
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ user: UserResponseDto }> {
     this.logger.info('AuthController', 'signIn received', req.meta, { body: signInDto });

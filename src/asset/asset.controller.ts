@@ -30,6 +30,8 @@ export class AssetController {
     private readonly logger: AppLogger,
   ) {}
 
+  // no auth guard here: Supabase signed URLs are scoped to a specific path and expire after 1 hour,
+  // so the endpoint does not need to gate on the caller's identity
   @Get('upload-url')
   async getUploadUrl(
     @Req() req: Request,
