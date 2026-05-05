@@ -5,6 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { UserResponseDto } from '../user/dto/user-response.dto';
+import { AppLogger } from 'src/common/logger/app-logger';
 
 @Injectable()
 export class AuthService {
@@ -12,27 +14,30 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly logger: AppLogger,
   ) {}
 
-  async signUp(createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  async signUp(createUserDto: CreateUserDto): Promise<UserResponseDto> {
+    this.logger.info('AuthService', 'signUp called', undefined, { email: createUserDto.email });
+    const result = await this.userService.create(createUserDto);
+    this.logger.info('AuthService', 'signUp done', undefined, { userId: result.id });
+    return result;
   }
 
-  async signIn(signInDto: SignInDto) {
+  async signIn(signInDto: SignInDto): Promise<{ accessToken: string; user: UserResponseDto }> {
+    this.logger.info('AuthService', 'signIn called', undefined, { email: signInDto.email });
     const user = await this.validateUser(signInDto.email, signInDto.password);
     const token = this.jwtService.sign({
       sub: user.id,
       email: user.email,
       role: user.role,
     });
-
-    return {
-      accessToken: token,
-      user,
-    };
+    this.logger.info('AuthService', 'signIn done', undefined, { userId: user.id });
+    return { accessToken: token, user };
   }
 
-  async validateUser(email: string, password: string) {
+  async validateUser(email: string, password: string): Promise<UserResponseDto> {
+    this.logger.info('AuthService', 'validateUser called', undefined, { email });
     const user = await this.userService.findByEmailWithPassword(email);
 
     if (!user) {
@@ -45,14 +50,15 @@ export class AuthService {
     }
 
     const { password: _password, ...sanitizedUser } = user;
-    return sanitizedUser;
+    this.logger.info('AuthService', 'validateUser done', undefined, { email });
+    return sanitizedUser as UserResponseDto;
   }
 
-  getCookieName() {
+  getCookieName(): string {
     return this.configService.get<string>('AUTH_COOKIE_NAME', 'Authentication');
   }
 
-  getCookieOptions() {
+  getCookieOptions(): { httpOnly: boolean; secure: boolean; sameSite: 'lax' | 'strict' | 'none'; maxAge: number; path: string } {
     const secure =
       this.configService.get<string>('COOKIE_SECURE', '') === 'true' ||
       this.configService.get<string>('NODE_ENV') === 'production';

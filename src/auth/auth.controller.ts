@@ -1,54 +1,69 @@
-import { Controller, Post, Body, Res, HttpCode } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Post, Body, Res, Req, HttpCode } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { AppLogger } from 'src/common/logger/app-logger';
+import { UserResponseDto } from '../user/dto/user-response.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly logger: AppLogger,
+  ) {}
 
   @Post('signup')
   async signUp(
+    @Req() req: Request,
     @Body() createUserDto: CreateUserDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<{ user: UserResponseDto }> {
+    this.logger.info('AuthController', 'signUp received', req.meta.requestId, { body: createUserDto });
     const user = await this.authService.signUp(createUserDto);
     const { accessToken } = await this.authService.signIn({
       email: createUserDto.email,
       password: createUserDto.password,
     });
-
     res.cookie(
       this.authService.getCookieName(),
       accessToken,
       this.authService.getCookieOptions(),
     );
-    return { user };
+    const result = { user };
+    this.logger.info('AuthController', 'signUp response', req.meta.requestId, { result });
+    return result;
   }
 
   @Post('signin')
   @HttpCode(200)
   async signIn(
+    @Req() req: Request,
     @Body() signInDto: SignInDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<{ user: UserResponseDto }> {
+    this.logger.info('AuthController', 'signIn received', req.meta.requestId, { body: signInDto });
     const { accessToken, user } = await this.authService.signIn(signInDto);
     res.cookie(
       this.authService.getCookieName(),
       accessToken,
       this.authService.getCookieOptions(),
     );
-    return { user };
+    const result = { user };
+    this.logger.info('AuthController', 'signIn response', req.meta.requestId, { result });
+    return result;
   }
 
   @Post('logout')
   @HttpCode(200)
-  logout(@Res({ passthrough: true }) res: Response) {
+  logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): { message: string } {
+    this.logger.info('AuthController', 'logout received', req.meta.requestId);
     res.clearCookie(
       this.authService.getCookieName(),
       this.authService.getCookieOptions(),
     );
-    return { message: 'Logged out successfully' };
+    const result = { message: 'Logged out successfully' };
+    this.logger.info('AuthController', 'logout response', req.meta.requestId, { result });
+    return result;
   }
 }
