@@ -10,6 +10,15 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+  ApiCookieAuth,
+} from '@nestjs/swagger';
 import { AssetService } from './asset.service';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -23,6 +32,7 @@ import type {
   AssetDeleteResponse,
 } from './dto/asset-response.dto';
 
+@ApiTags('Assets')
 @Controller('asset')
 export class AssetController {
   constructor(
@@ -33,6 +43,9 @@ export class AssetController {
   // no auth guard here: Supabase signed URLs are scoped to a specific path and expire after 1 hour,
   // so the endpoint does not need to gate on the caller's identity
   @Get('upload-url')
+  @ApiOperation({ summary: 'Get a 1-hour Supabase signed upload URL for a file' })
+  @ApiQuery({ name: 'fileName', description: 'Original file name (used to derive the storage path)' })
+  @ApiResponse({ status: 200, schema: { properties: { signedUrl: { type: 'string' }, token: { type: 'string' }, path: { type: 'string' } } } })
   async getUploadUrl(
     @Req() req: Request,
     @Query('fileName') fileName: string,
@@ -44,6 +57,9 @@ export class AssetController {
   }
 
   @Get('view-url')
+  @ApiOperation({ summary: 'Get a 1-hour Supabase signed view URL for a stored asset' })
+  @ApiQuery({ name: 'path', description: 'Storage path of the asset (returned by upload-url)' })
+  @ApiResponse({ status: 200, schema: { properties: { signedUrl: { type: 'string' } } } })
   async getViewUrl(
     @Req() req: Request,
     @Query('path') path: string,
@@ -56,6 +72,11 @@ export class AssetController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  @ApiCookieAuth('Authentication')
+  @ApiOperation({ summary: 'Save an asset record after a successful upload' })
+  @ApiBody({ type: CreateAssetDto })
+  @ApiResponse({ status: 201, description: 'Asset record created' })
+  @ApiResponse({ status: 401, description: 'Unauthorised' })
   async createRecord(
     @Req() req: Request,
     @CurrentUser() user: JwtPayload,
@@ -69,6 +90,10 @@ export class AssetController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiCookieAuth('Authentication')
+  @ApiOperation({ summary: 'Soft-delete an asset record (owner only)' })
+  @ApiParam({ name: 'id', description: 'Asset UUID' })
+  @ApiResponse({ status: 200, description: 'Asset soft-deleted' })
   async removeRecord(
     @Req() req: Request,
     @Param('id') id: string,
