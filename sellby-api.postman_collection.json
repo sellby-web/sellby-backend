@@ -1,0 +1,382 @@
+{
+  "info": {
+    "_postman_id": "sellby-backend-collection",
+    "name": "Sellby Backend API",
+    "description": "REST API collection for the Sellby classified marketplace backend.\nBase URL: http://localhost:3001\n\nImage upload flow:\n1. GET /asset/upload-url?fileName=photo.jpg  → get signed URL\n2. PUT directly to Supabase using the signed URL\n3. POST /asset with { url, advertisementId, position } to save the DB record",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001", "type": "string" },
+    { "key": "userId", "value": "", "type": "string" },
+    { "key": "adId", "value": "", "type": "string" },
+    { "key": "otherUserId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"user\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/auth/signup", "host": ["{{baseUrl}}"], "path": ["auth", "signup"] },
+            "description": "Register a new user. Sets HTTP-only JWT cookie on success."
+          }
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/auth/signin", "host": ["{{baseUrl}}"], "path": ["auth", "signin"] },
+            "description": "Log in. Sets HTTP-only JWT cookie (Authentication)."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] },
+            "description": "Clear the Authentication cookie."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?skip=0&take=10",
+              "host": ["{{baseUrl}}"], "path": ["users"],
+              "query": [
+                { "key": "skip", "value": "0" },
+                { "key": "take", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/search?query=john",
+              "host": ["{{baseUrl}}"], "path": ["users", "search"],
+              "query": [{ "key": "query", "value": "john" }]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Johnny\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Get Deleted Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/users/deleted", "host": ["{{baseUrl}}"], "path": ["users", "deleted"] },
+            "description": "Returns all soft-deleted users, ordered by deletion time."
+          }
+        },
+        {
+          "name": "Soft Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Hard Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/hard", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}", "hard"] },
+            "description": "Permanently removes the user record from the database. Irreversible."
+          }
+        },
+        {
+          "name": "Restore User",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/restore", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}", "restore"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Advertisements",
+      "item": [
+        {
+          "name": "Create Ad",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"iPhone 14 Pro\",\n  \"description\": \"Used for 6 months, excellent condition.\",\n  \"price\": 850,\n  \"author\": \"John D\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/advertisement", "host": ["{{baseUrl}}"], "path": ["advertisement"] },
+            "description": "Requires auth cookie. createdBy is derived from the JWT."
+          }
+        },
+        {
+          "name": "List Ads",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/advertisement?skip=0&take=20&search=&status=ACTIVE",
+              "host": ["{{baseUrl}}"], "path": ["advertisement"],
+              "query": [
+                { "key": "skip", "value": "0" },
+                { "key": "take", "value": "20" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "status", "value": "ACTIVE", "description": "ACTIVE | SOLD | UNAVAILABLE" }
+              ]
+            },
+            "description": "Public. Supports search and status filter."
+          }
+        },
+        {
+          "name": "Get Ad by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/advertisement/{{adId}}", "host": ["{{baseUrl}}"], "path": ["advertisement", "{{adId}}"] },
+            "description": "Public. Returns ad with assets and creator info."
+          }
+        },
+        {
+          "name": "Update Ad",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"iPhone 14 Pro — Price Drop!\",\n  \"price\": 799\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/advertisement/{{adId}}", "host": ["{{baseUrl}}"], "path": ["advertisement", "{{adId}}"] },
+            "description": "Auth required. Owner only."
+          }
+        },
+        {
+          "name": "Update Ad Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"SOLD\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/advertisement/{{adId}}/status", "host": ["{{baseUrl}}"], "path": ["advertisement", "{{adId}}", "status"] },
+            "description": "Auth required. Owner only. status: ACTIVE | SOLD | UNAVAILABLE\nWhen SOLD or UNAVAILABLE, messaging is blocked on this ad."
+          }
+        },
+        {
+          "name": "Delete Ad",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/advertisement/{{adId}}", "host": ["{{baseUrl}}"], "path": ["advertisement", "{{adId}}"] },
+            "description": "Auth required. Owner only. Soft delete."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assets (Image Upload)",
+      "item": [
+        {
+          "name": "1. Get Signed Upload URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/asset/upload-url?fileName=photo.jpg",
+              "host": ["{{baseUrl}}"], "path": ["asset", "upload-url"],
+              "query": [{ "key": "fileName", "value": "photo.jpg", "description": "Name of the file to upload" }]
+            },
+            "description": "Step 1: Get a 1-hour Supabase signed URL for direct client upload."
+          }
+        },
+        {
+          "name": "2. Save Asset Record (after upload)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"uploads/photo.jpg\",\n  \"advertisementId\": \"{{adId}}\",\n  \"position\": 0\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/asset", "host": ["{{baseUrl}}"], "path": ["asset"] },
+            "description": "Step 3: After uploading to Supabase, save the asset record. Auth required. Must own the ad."
+          }
+        },
+        {
+          "name": "3. Get View URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/asset/view-url?path=uploads/photo.jpg",
+              "host": ["{{baseUrl}}"], "path": ["asset", "view-url"],
+              "query": [{ "key": "path", "value": "uploads/photo.jpg" }]
+            },
+            "description": "Get a 1-hour signed URL to view/download a stored file."
+          }
+        },
+        {
+          "name": "Delete Asset",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/asset/:assetId", "host": ["{{baseUrl}}"], "path": ["asset", ":assetId"] },
+            "description": "Soft-delete an asset. Auth required. Must own the ad."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wishlist",
+      "item": [
+        {
+          "name": "Get My Wishlist",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/wishlist", "host": ["{{baseUrl}}"], "path": ["wishlist"] },
+            "description": "Auth required. Returns wishlist with all saved ads and their assets."
+          }
+        },
+        {
+          "name": "Add Ad to Wishlist",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"advertisementId\": \"{{adId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/wishlist/items", "host": ["{{baseUrl}}"], "path": ["wishlist", "items"] },
+            "description": "Auth required. Wishlist is auto-created on first use. Adding a duplicate returns 409."
+          }
+        },
+        {
+          "name": "Remove Ad from Wishlist",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/wishlist/items/{{adId}}", "host": ["{{baseUrl}}"], "path": ["wishlist", "items", "{{adId}}"] },
+            "description": "Auth required. Removes the ad from the user's wishlist."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages (REST)",
+      "item": [
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"{{otherUserId}}\",\n  \"advertisementId\": \"{{adId}}\",\n  \"message\": \"Is this still available?\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/message", "host": ["{{baseUrl}}"], "path": ["message"] },
+            "description": "Auth required. Returns 403 if the ad is SOLD or UNAVAILABLE. Use WebSocket for real-time delivery."
+          }
+        },
+        {
+          "name": "List Conversations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/message/conversations", "host": ["{{baseUrl}}"], "path": ["message", "conversations"] },
+            "description": "Auth required. Returns the latest message per conversation (grouped by ad + partner)."
+          }
+        },
+        {
+          "name": "Get Conversation History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/message/conversations/{{adId}}/{{otherUserId}}?skip=0&take=50",
+              "host": ["{{baseUrl}}"], "path": ["message", "conversations", "{{adId}}", "{{otherUserId}}"],
+              "query": [
+                { "key": "skip", "value": "0" },
+                { "key": "take", "value": "50" }
+              ]
+            },
+            "description": "Auth required. Returns full message history for a specific ad + partner pair."
+          }
+        },
+        {
+          "name": "Mark Messages Viewed",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messageIds\": [\"<uuid1>\", \"<uuid2>\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/message/viewed", "host": ["{{baseUrl}}"], "path": ["message", "viewed"] },
+            "description": "Auth required. Marks messages as read (isViewed=true) for the authenticated receiver."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages (WebSocket)",
+      "description": "Real-time messaging via Socket.IO.\n\nConnection:\n  URL: ws://localhost:3001/messages\n  withCredentials: true  (sends the Authentication cookie automatically)\n  Auth is validated from the JWT cookie on connect. Invalid/missing token disconnects the socket.\n\nConversation rooms:\n  Messages are scoped to a room per conversation: conversation:<adId>:<userId1>:<userId2>\n  User IDs are sorted alphabetically so the room name is the same for both participants.\n  A user must join a conversation room before they receive new_message events for it.\n\nClient → Server events:\n  join_conversation   { advertisementId, otherUserId }  → joins the scoped room\n  leave_conversation  { advertisementId, otherUserId }  → leaves the scoped room\n  send_message        { receiverId, advertisementId, message }\n  mark_viewed         { messageIds: string[] }\n\nServer → Client events:\n  new_message    full message object (emitted to the conversation room)\n\nAcknowledgements:\n  join_conversation   { success: true, room: \"conversation:...\" }  or  { success: false, error }\n  leave_conversation  { success: true }  or  { success: false }\n  send_message        { success: true, data: <message> }  or  { success: false, error }\n  mark_viewed         { success: true }  or  { success: false, error }\n\nTypical client flow:\n  1. connect()  (cookie sent automatically)\n  2. emit join_conversation { advertisementId, otherUserId }  → open chat\n  3. emit send_message { receiverId, advertisementId, message }  → send\n  4. on new_message  → receive\n  5. emit leave_conversation { advertisementId, otherUserId }  → close chat",
+      "item": []
+    }
+  ]
+}

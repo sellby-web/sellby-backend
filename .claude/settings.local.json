@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /d e:\\\\sellby-backend)",
+      "Bash(npm install *)"
+    ]
+  }
+}

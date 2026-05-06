@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Advertisement {
+  id          String    @id @default(uuid()) @db.Uuid
+  createdBy   String    @map("created_by") @db.Uuid
+  title       String    @db.VarChar
+  description String    @db.VarChar
+  price       Int
+  author      String?   @db.VarChar
+  status      String    @default("ACTIVE") @db.VarChar
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamp(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+
+  creator     User                    @relation(fields: [createdBy], references: [id])
+  assets      Asset[]
+  wishlistAds WishlistAdvertisement[]
+  messages    Message[]
+
+  @@index([createdBy])
+  @@index([price])
+  @@index([title])
+  @@index([status])
+  @@map("advertisements")
+}
+
+model Asset {
+  id              String    @id @default(uuid()) @db.Uuid
+  advertisementId String    @map("advertisement_id") @db.Uuid
+  url             String    @db.VarChar
+  position        Int
+  isDeleted       Boolean?  @default(false) @map("is_deleted")
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamp(6)
+  createdBy       String    @map("created_by") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+
+  advertisement Advertisement @relation(fields: [advertisementId], references: [id])
+  creator       User          @relation(fields: [createdBy], references: [id])
+
+  @@index([advertisementId])
+  @@map("assets")
+}
+
+model Message {
+  id              String    @id @default(uuid()) @db.Uuid
+  senderId        String    @map("sender_id") @db.Uuid
+  receiverId      String    @map("receiver_id") @db.Uuid
+  advertisementId String    @map("advertisement_id") @db.Uuid
+  message         String    @db.VarChar
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  isDeleted       Boolean?  @default(false) @map("is_deleted")
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamp(6)
+  isViewed        Boolean?  @default(false) @map("is_viewed")
+
+  sender        User          @relation("SentMessages", fields: [senderId], references: [id])
+  receiver      User          @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  advertisement Advertisement @relation(fields: [advertisementId], references: [id])
+
+  @@index([receiverId])
+  @@index([senderId])
+  @@index([advertisementId])
+  @@map("messages")
+}
+
+model User {
+  id          String    @id @default(uuid()) @db.Uuid
+  firstName   String    @map("first_name") @db.VarChar
+  lastName    String    @map("last_name") @db.VarChar
+  email       String    @unique @db.VarChar
+  password    String    @db.VarChar
+  role        String    @db.VarChar
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+
+  advertisements   Advertisement[]
+  assets           Asset[]
+  sentMessages     Message[]              @relation("SentMessages")
+  receivedMessages Message[]              @relation("ReceivedMessages")
+  wishlists        Wishlist[]
+  wishlistAds      WishlistAdvertisement[]
+
+  @@map("users")
+}
+
+model WishlistAdvertisement {
+  id              String   @id @default(uuid()) @db.Uuid
+  advertisementId String   @map("advertisement_id") @db.Uuid
+  wishlistId      String   @map("wishlist_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdBy       String   @map("created_by") @db.Uuid
+
+  advertisement Advertisement @relation(fields: [advertisementId], references: [id])
+  wishlist      Wishlist      @relation(fields: [wishlistId], references: [id])
+  creator       User          @relation(fields: [createdBy], references: [id])
+
+  @@unique([wishlistId, advertisementId])
+  @@map("wishlist_advertisements")
+}
+
+model Wishlist {
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @unique @map("owner_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  owner       User                    @relation(fields: [ownerId], references: [id])
+  wishlistAds WishlistAdvertisement[]
+
+  @@map("wishlists")
+}
