@@ -9,6 +9,7 @@ const mockWishlistService = {
   addItem: jest.fn(),
   removeItem: jest.fn(),
 };
+
 const mockAppLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
 
 describe('WishlistController', () => {
