@@ -9,6 +9,14 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+  ApiCookieAuth,
+} from '@nestjs/swagger';
 import { WishlistService } from './wishlist.service';
 import { AddWishlistItemDto } from './dto/add-wishlist-item.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -17,6 +25,8 @@ import { JwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
 import { AppLogger } from 'src/common/logger/app-logger';
 import type { WishlistWithAds, WishlistItemWithAd } from './dto/wishlist-response.dto';
 
+@ApiTags('Wishlist')
+@ApiCookieAuth('Authentication')
 @Controller('wishlist')
 @UseGuards(JwtAuthGuard)
 export class WishlistController {
@@ -26,6 +36,8 @@ export class WishlistController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: "Get the authenticated user's wishlist with all saved advertisements" })
+  @ApiResponse({ status: 200, description: 'Wishlist with advertisements, or null if none exists' })
   async getWishlist(@Req() req: Request, @CurrentUser() user: JwtPayload): Promise<WishlistWithAds | null> {
     this.logger.info('WishlistController', 'getWishlist received', req.meta, { userId: user.userId });
     const result = await this.wishlistService.getWishlist(user.userId);
@@ -34,6 +46,10 @@ export class WishlistController {
   }
 
   @Post('items')
+  @ApiOperation({ summary: 'Add an advertisement to the wishlist' })
+  @ApiBody({ type: AddWishlistItemDto })
+  @ApiResponse({ status: 201, description: 'Item added to wishlist' })
+  @ApiResponse({ status: 409, description: 'Advertisement already in wishlist' })
   async addItem(
     @Req() req: Request,
     @CurrentUser() user: JwtPayload,
@@ -46,6 +62,10 @@ export class WishlistController {
   }
 
   @Delete('items/:advertisementId')
+  @ApiOperation({ summary: 'Remove an advertisement from the wishlist' })
+  @ApiParam({ name: 'advertisementId', description: 'UUID of the advertisement to remove' })
+  @ApiResponse({ status: 200, description: 'Item removed from wishlist' })
+  @ApiResponse({ status: 404, description: 'Item not found in wishlist' })
   async removeItem(
     @Req() req: Request,
     @CurrentUser() user: JwtPayload,

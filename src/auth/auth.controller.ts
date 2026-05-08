@@ -1,11 +1,18 @@
 import { Controller, Post, Body, Res, Req, HttpCode } from '@nestjs/common';
 import { Request, Response } from 'express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { AppLogger } from 'src/common/logger/app-logger';
 import { UserResponseDto } from '../user/dto/user-response.dto';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -14,6 +21,11 @@ export class AuthController {
   ) {}
 
   @Post('signup')
+  @ApiOperation({ summary: 'Register a new user and receive a session cookie' })
+  @ApiBody({ type: CreateUserDto })
+  @ApiResponse({ status: 201, description: 'User created; Authentication cookie set', type: UserResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 409, description: 'Email already in use' })
   async signUp(
     @Req() req: Request,
     @Body() createUserDto: CreateUserDto,
@@ -40,6 +52,10 @@ export class AuthController {
 
   @Post('signin')
   @HttpCode(200)
+  @ApiOperation({ summary: 'Sign in and receive a session cookie' })
+  @ApiBody({ type: SignInDto })
+  @ApiResponse({ status: 200, description: 'Signed in; Authentication cookie set', type: UserResponseDto })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async signIn(
     @Req() req: Request,
     @Body() signInDto: SignInDto,
@@ -61,6 +77,8 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(200)
+  @ApiOperation({ summary: 'Clear the session cookie' })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
   logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): { message: string } {
     this.logger.info('AuthController', 'logout received', req.meta);
     res.clearCookie(

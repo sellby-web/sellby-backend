@@ -10,6 +10,14 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+  ApiCookieAuth,
+} from '@nestjs/swagger';
 import { MessageService } from './message.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { GetHistoryDto } from './dto/get-history.dto';
@@ -19,6 +27,8 @@ import { JwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
 import { MarkViewedDto } from './dto/mark-viewed.dto';
 import { AppLogger } from 'src/common/logger/app-logger';
 
+@ApiTags('Messages')
+@ApiCookieAuth('Authentication')
 @Controller('message')
 @UseGuards(JwtAuthGuard)
 export class MessageController {
@@ -28,6 +38,10 @@ export class MessageController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Send a message about an advertisement' })
+  @ApiBody({ type: SendMessageDto })
+  @ApiResponse({ status: 201, description: 'Message sent' })
+  @ApiResponse({ status: 401, description: 'Unauthorised' })
   async send(
     @Req() req: Request,
     @CurrentUser() user: JwtPayload,
@@ -45,6 +59,8 @@ export class MessageController {
   }
 
   @Get('conversations')
+  @ApiOperation({ summary: 'List all conversations for the authenticated user' })
+  @ApiResponse({ status: 200, description: 'List of conversations' })
   async getConversationList(
     @Req() req: Request,
     @CurrentUser() user: JwtPayload,
@@ -66,6 +82,10 @@ export class MessageController {
   }
 
   @Get('conversations/:advertisementId/:otherUserId')
+  @ApiOperation({ summary: 'Get message history for a specific advertisement conversation' })
+  @ApiParam({ name: 'advertisementId', description: 'Advertisement UUID' })
+  @ApiParam({ name: 'otherUserId', description: 'UUID of the other participant' })
+  @ApiResponse({ status: 200, description: 'Paginated message history' })
   async getConversation(
     @Req() req: Request,
     @CurrentUser() user: JwtPayload,
@@ -95,6 +115,9 @@ export class MessageController {
   }
 
   @Patch('viewed')
+  @ApiOperation({ summary: 'Mark a set of messages as viewed' })
+  @ApiBody({ type: MarkViewedDto })
+  @ApiResponse({ status: 200, description: 'Messages marked as viewed' })
   async markViewed(
     @Req() req: Request,
     @CurrentUser() user: JwtPayload,

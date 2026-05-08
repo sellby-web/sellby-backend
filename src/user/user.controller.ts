@@ -10,6 +10,14 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+  ApiCookieAuth,
+} from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -18,6 +26,8 @@ import { UserSearchDto } from './dto/user-search.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { AppLogger } from 'src/common/logger/app-logger';
 
+@ApiTags('Users')
+@ApiCookieAuth('Authentication')
 @Controller('users')
 export class UserController {
   constructor(
@@ -26,6 +36,9 @@ export class UserController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a user directly (admin use)' })
+  @ApiBody({ type: CreateUserDto })
+  @ApiResponse({ status: 201, type: UserResponseDto })
   async create(
     @Req() req: Request,
     @Body() createUserDto: CreateUserDto,
@@ -37,6 +50,8 @@ export class UserController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List all users (paginated)' })
+  @ApiResponse({ status: 200, schema: { properties: { data: { type: 'array', items: { $ref: '#/components/schemas/UserResponseDto' } }, total: { type: 'number' } } } })
   async findAll(
     @Req() req: Request,
     @Query() paginationDto: UserPaginationDto,
@@ -48,6 +63,8 @@ export class UserController {
   }
 
   @Get('search')
+  @ApiOperation({ summary: 'Search users by name or email' })
+  @ApiResponse({ status: 200, schema: { properties: { data: { type: 'array', items: { $ref: '#/components/schemas/UserResponseDto' } }, total: { type: 'number' } } } })
   async search(
     @Req() req: Request,
     @Query() searchDto: UserSearchDto,
@@ -59,6 +76,8 @@ export class UserController {
   }
 
   @Get('deleted')
+  @ApiOperation({ summary: 'List soft-deleted users' })
+  @ApiResponse({ status: 200, type: [UserResponseDto] })
   async getDeletedUsers(@Req() req: Request): Promise<UserResponseDto[]> {
     this.logger.info('UserController', 'getDeletedUsers received', req.meta);
     const result = await this.userService.getDeletedUsers(req.meta);
@@ -67,6 +86,10 @@ export class UserController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a user by ID' })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiResponse({ status: 200, type: UserResponseDto })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async findOne(@Req() req: Request, @Param('id') id: string): Promise<UserResponseDto> {
     this.logger.info('UserController', 'findOne received', req.meta, { id });
     const result = await this.userService.findOne(id, req.meta);
@@ -75,6 +98,10 @@ export class UserController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update a user' })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiBody({ type: UpdateUserDto })
+  @ApiResponse({ status: 200, type: UserResponseDto })
   async update(
     @Req() req: Request,
     @Param('id') id: string,
@@ -87,6 +114,9 @@ export class UserController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Soft-delete a user' })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiResponse({ status: 200, type: UserResponseDto })
   async remove(@Req() req: Request, @Param('id') id: string): Promise<UserResponseDto> {
     this.logger.info('UserController', 'remove received', req.meta, { id });
     const result = await this.userService.remove(id, req.meta);
@@ -95,6 +125,9 @@ export class UserController {
   }
 
   @Delete(':id/hard')
+  @ApiOperation({ summary: 'Permanently delete a user' })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiResponse({ status: 200, type: UserResponseDto })
   async hardDelete(@Req() req: Request, @Param('id') id: string): Promise<UserResponseDto> {
     this.logger.info('UserController', 'hardDelete received', req.meta, { id });
     const result = await this.userService.hardDelete(id, req.meta);
@@ -103,6 +136,9 @@ export class UserController {
   }
 
   @Patch(':id/restore')
+  @ApiOperation({ summary: 'Restore a soft-deleted user' })
+  @ApiParam({ name: 'id', description: 'User UUID' })
+  @ApiResponse({ status: 200, type: UserResponseDto })
   async restore(@Req() req: Request, @Param('id') id: string): Promise<UserResponseDto> {
     this.logger.info('UserController', 'restore received', req.meta, { id });
     const result = await this.userService.restore(id, req.meta);
