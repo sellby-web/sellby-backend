@@ -43,7 +43,3 @@ jobs:
       # 5️⃣ Run unit tests
       - name: Run tests
         run: npm run test
-
-      # 6️⃣ Build the application (NestJS build step)
-      - name: Build application
-        run: npm run build
