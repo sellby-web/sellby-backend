@@ -17,7 +17,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /home/ubuntu/app
+            cd /home/ubuntu/sellby-backend
 
             git pull origin master
 
