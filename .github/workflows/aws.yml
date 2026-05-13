@@ -19,7 +19,7 @@ jobs:
           script: |
             cd /home/ubuntu/sellby-backend
 
-            git pull origin master
+            git pull origin main
 
             docker compose up -d --build --remove-orphans
             
